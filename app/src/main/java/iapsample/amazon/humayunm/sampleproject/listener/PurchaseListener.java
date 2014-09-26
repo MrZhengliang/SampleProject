@@ -1,4 +1,4 @@
-package iapsample.amazon.humayunm.sampleproject;
+package iapsample.amazon.humayunm.sampleproject.listener;
 
 import android.util.Log;
 
