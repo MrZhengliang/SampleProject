@@ -16,5 +16,13 @@
     <string name="drawer_close">Close navigation drawer</string>
     <string name="action_websearch">Web search</string>
     <string name="app_not_available">Sorry, there\'s no web browser available</string>
+    <string name="buy_orange">Buy Orange</string>
+    <string name="i_have">I have</string>
+    <string name="zero">0</string>
+    <string name="oranges">orange(s)</string>
+    <string name="eat_orange">Eat Orange</string>
+    <string name="i_ate">I ate</string>
+    <string name="oranges_already">orange(s) already</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

@@ -26,6 +26,9 @@ import android.util.Log;
 
 import java.util.Locale;
 
+import iapsample.amazon.humayunm.sampleproject.fragment.ConsumableFragment;
+import iapsample.amazon.humayunm.sampleproject.fragment.EntitlementFragment;
+import iapsample.amazon.humayunm.sampleproject.fragment.SubscriptionFragment;
 import iapsample.amazon.humayunm.sampleproject.listener.PurchaseListener;
 
 
@@ -62,6 +65,9 @@ public class MyActivity extends Activity {
         // enable ActionBar app icon to behave as action to toggle nav drawer
         getActionBar().setDisplayHomeAsUpEnabled(true);
         getActionBar().setHomeButtonEnabled(true);
+
+        // Initialize IAP listeners
+        initializeListeners();
 
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the sliding drawer and the action bar app icon
@@ -145,13 +151,30 @@ public class MyActivity extends Activity {
 
     private void selectItem(int position) {
         // update the main content by replacing fragments
-        Fragment fragment = new PlanetFragment();
-        Bundle args = new Bundle();
-        args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
-        fragment.setArguments(args);
+        Fragment fragment = null;
 
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+        //Consumable
+        if(position == 0) {
+            fragment = new ConsumableFragment();
+        }
+
+        //Non Consumable
+        if(position == 1) {
+            fragment = new EntitlementFragment();
+        }
+
+        //Subscription
+        if(position == 2) {
+            fragment = new SubscriptionFragment();
+        }
+
+        if(fragment != null) {
+            final FragmentManager fragmentManager = getFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.content_frame, fragment).commit();
+
+        } else {
+            Log.e(this.getClass().getName(), "Unknown fragment at position " + position);
+        }
 
         // update selected item and title, then close the drawer
         mDrawerList.setItemChecked(position, true);

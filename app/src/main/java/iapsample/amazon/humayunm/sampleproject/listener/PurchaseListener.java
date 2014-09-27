@@ -23,8 +23,10 @@ public class PurchaseListener implements PurchasingListener{
     @Override
     public void onUserDataResponse(UserDataResponse userDataResponse) {
         final UserDataResponse.RequestStatus status = userDataResponse.getRequestStatus();
+        Log.d(TAG, "onUserDataResponse");
 
-    //TODO: Implementation
+
+        //TODO: Implementation
         switch (status) {
             case SUCCESSFUL:
                 break;
@@ -60,7 +62,7 @@ public class PurchaseListener implements PurchasingListener{
 
     @Override
     public void onPurchaseResponse(PurchaseResponse purchaseResponse) {
-
+        Log.d(TAG, "onPurchasesResponse");
     }
 
     @Override
