@@ -1,20 +1,25 @@
 package iapsample.amazon.humayunm.sampleproject.fragment;
 
-import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.amazon.device.iap.PurchasingService;
 import com.amazon.device.iap.model.RequestId;
 
 import iapsample.amazon.humayunm.sampleproject.R;
-import iapsample.amazon.humayunm.sampleproject.sku.MySKU;
+import iapsample.amazon.humayunm.sampleproject.data.ConsumableData;
+import iapsample.amazon.humayunm.sampleproject.data.UserData;
+import iapsample.amazon.humayunm.sampleproject.listener.PurchaseListener;
+import iapsample.amazon.humayunm.sampleproject.manager.IAPConsumableManager;
+import iapsample.amazon.humayunm.sampleproject.sku.MySku;
+import iapsample.amazon.humayunm.sampleproject.util.UserUtil;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,19 +28,18 @@ import iapsample.amazon.humayunm.sampleproject.sku.MySKU;
  * create an instance of this fragment.
  *
  */
-public class ConsumableFragment extends Fragment implements View.OnClickListener {
-
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+public class ConsumableFragment extends IAPFragment implements View.OnClickListener {
 
     private static final String TAG = "SampleIAPProject";
 
+    private TextView availableOrangesField;
+    private TextView consumedOrangesField;
+
+    private Button eatOrangeButton;
+    private Button buyOrangeButton;
+
+    private Handler handler;
+    private IAPConsumableManager manager;
 
     /**
      * Use this factory method to create a new instance of
@@ -48,25 +52,28 @@ public class ConsumableFragment extends Fragment implements View.OnClickListener
     // TODO: Rename and change types and number of parameters
     public static ConsumableFragment newInstance(String param1, String param2) {
         ConsumableFragment fragment = new ConsumableFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
+
     public ConsumableFragment() {
         // Required empty public constructor
+        //initialize();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        initialize();
     }
+    @Override
+    public void initialize() {
+        //
+        // Initialize the manager
+        //
+        manager = new IAPConsumableManager(this);
+        handler = new Handler();
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -74,11 +81,16 @@ public class ConsumableFragment extends Fragment implements View.OnClickListener
 
         final View view = inflater.inflate(R.layout.fragment_consumable, container, false);
 
-        final Button eat_orange_button = (Button)view.findViewById(R.id.eat_orange_button);
-        eat_orange_button.setOnClickListener(this);
+        //
+        // Initialize the UI elements
+        //
+        availableOrangesField = (TextView) view.findViewById(R.id.num_oranges);
+        consumedOrangesField = (TextView) view.findViewById(R.id.num_oranges_consumed);
+        buyOrangeButton = (Button) view.findViewById(R.id.buy_orange_button);
+        eatOrangeButton = (Button)view.findViewById(R.id.eat_orange_button);
 
-        final Button buy_orange_button = (Button)view.findViewById(R.id.buy_orange_button);
-        buy_orange_button.setOnClickListener(this);
+        eatOrangeButton.setOnClickListener(this);
+        buyOrangeButton.setOnClickListener(this);
 
         return view;
     }
@@ -102,8 +114,12 @@ public class ConsumableFragment extends Fragment implements View.OnClickListener
      * with the SKU to initialize the purchase from Amazon Appstore
      */
     private void onBuyOrangeClick() {
-        final RequestId requestId = PurchasingService.purchase(MySKU.ORANGE.getSku());
+        final RequestId requestId = PurchasingService.purchase(MySku.ORANGE.getSku());
         Log.d(TAG, "onBuyOrangeClick: requestId (" + requestId + ")");
+
+        //
+        // View will get updated after the call-back from the listener completes
+        //
     }
 
     /**
@@ -113,11 +129,88 @@ public class ConsumableFragment extends Fragment implements View.OnClickListener
         try {
             //sampleIapManager.eatOrange();
             Log.d(TAG, "onEatOrangeClick: consuming 1 orange");
+            eatOrange();
 
-//            updateOrangesInView(sampleIapManager.getUserIapData().getRemainingOranges(),
-//                    sampleIapManager.getUserIapData().getConsumedOranges());
         } catch (final RuntimeException e) {
-            //showMessage("Unknow error when eat Orange");
+            Log.e(TAG,"Unknown error when eat Orange");
         }
     }
+
+
+    private void eatOrange() {
+        //
+        // Get user details
+        //
+        final UserData currentUser = UserUtil.getCurrentUserDetails();
+        if(currentUser == null)
+        {
+            Log.e(TAG, "User data not available");
+            return;
+        }
+
+        //
+        // User data is available
+        //
+        final ConsumableData data = manager.getConsumableData(currentUser);
+
+        //
+        // Check if we can eat on orange
+        //
+        if (data.getOrangesAvailable() <= 0) {
+            Log.i(TAG,"No oranges available");
+            return;
+        }
+
+        //
+        // If we get here then we are able to eat an orange
+        //
+        final int newAvailableOranges = data.getOrangesAvailable() - 1;
+        final int newOrangesConsumed = data.getOrangesConsumed() + 1;
+        data.setOrangesAvailable(newAvailableOranges);
+        data.setOrangesConsumed(newOrangesConsumed);
+
+        boolean success = manager.updateConsumableData(data);
+
+        if(!success) {
+            Log.e(TAG, "Failed to update the data");
+            return;
+        }
+        //
+        // Update the view
+        //
+        updateView(newAvailableOranges, newOrangesConsumed);
+    }
+
+    @Override
+    public void refresh() {
+        final UserData currentUser = UserUtil.getCurrentUserDetails();
+        if(currentUser == null)
+        {
+            Log.e(TAG, "User data not available. Can't refresh");
+            return;
+        }
+
+        //
+        // Retrieve the iap data
+        //
+        final ConsumableData consumableData = manager.getConsumableData(currentUser);
+        updateView(consumableData.getOrangesAvailable(), consumableData.getOrangesConsumed());
+    }
+
+    private void updateView(final int orangesAvailable, final int orangesConsumed) {
+        Log.d(TAG, "updateOrangesInView with haveQuantity (" + orangesAvailable
+                + ") and consumedQuantity ("
+                + orangesConsumed
+                + ")");
+
+        handler.postAtFrontOfQueue(new Runnable() {
+            @Override
+            public void run() {
+                availableOrangesField.setText(String.valueOf(orangesAvailable));
+                consumedOrangesField.setText(String.valueOf(orangesAvailable));
+            }
+        });
+    }
+
+
 }

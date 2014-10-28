@@ -3,23 +3,23 @@ package iapsample.amazon.humayunm.sampleproject.sku;
 /**
  * Created by humayunm on 9/26/2014.
  */
-public enum MySKU {
+public enum MySku {
 
     // This is the product to purchase and eat in the sample code.
-    ORANGE("com.amazon.sample.iap.consumable.orange", "US", iapsample.amazon.humayunm.sampleproject.sku.SKUType.CONSUMABLE),
+    ORANGE("com.amazon.sample.iap.consumable.orange", "US", iapsample.amazon.humayunm.sampleproject.sku.SkuType.CONSUMABLE),
 
     // This is a sample product to show how IAP SDK handle not supported
     // products
-    APPLE("com.amazon.sample.iap.consumable.apple", "US", iapsample.amazon.humayunm.sampleproject.sku.SKUType.CONSUMABLE);
+    APPLE("com.amazon.sample.iap.consumable.apple", "US", iapsample.amazon.humayunm.sampleproject.sku.SkuType.CONSUMABLE);
 
     private final String sku;
     private final String availableMarketplace;
-    private final SKUType SKUType;
+    private final SkuType SkuType;
 
-    private MySKU(final String sku, final String availableMarketplace, final SKUType SKUType) {
+    private MySku(final String sku, final String availableMarketplace, final SkuType SkuType) {
         this.sku = sku;
         this.availableMarketplace = availableMarketplace;
-        this.SKUType = SKUType;
+        this.SkuType = SkuType;
     }
 
     /**
